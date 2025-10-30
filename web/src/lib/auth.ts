@@ -1,10 +1,11 @@
-import NextAuth from "next-auth";
+import { getServerSession } from "next-auth";
+import type { NextAuthOptions } from "next-auth";
 import Google from "next-auth/providers/google";
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID ?? "";
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET ?? "";
 
-export const { auth, handlers, signIn, signOut } = NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
     Google({
       clientId: googleClientId || "GOOGLE_CLIENT_ID_NOT_SET",
@@ -23,5 +24,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     },
   },
   trustHost: true,
-});
+};
 
+export function auth() {
+  return getServerSession(authOptions);
+}

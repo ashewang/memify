@@ -7,6 +7,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
+	"github.com/anshuwang/memify/server/internal/ai"
 	"github.com/anshuwang/memify/server/internal/config"
 )
 
@@ -23,7 +24,8 @@ func NewRouter(cfg config.Config) *gin.Engine {
 	router.Use(cors.New(corsConfig(cfg)))
 
 	registerSystemEndpoints(router)
-	registerAPIRoutes(router.Group("/api"))
+	aiClient := ai.NewClient(cfg.PythonServiceURL, nil)
+	registerAPIRoutes(router.Group("/api"), aiClient)
 
 	return router
 }
@@ -66,7 +68,7 @@ func registerSystemEndpoints(router *gin.Engine) {
 	})
 }
 
-func registerAPIRoutes(group *gin.RouterGroup) {
+func registerAPIRoutes(group *gin.RouterGroup, aiClient ai.Client) {
 	group.GET("/ping", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
 			"message": "pong",
@@ -80,13 +82,7 @@ func registerAPIRoutes(group *gin.RouterGroup) {
 		})
 	})
 
-	// Placeholder routes for future implementation.
-	group.POST("/memes/generate", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusAccepted, gin.H{
-			"status":  "queued",
-			"message": "Meme generation pipeline stub. Connect AI service to enable.",
-		})
-	})
+	group.POST("/memes/generate", memeGenerateHandler(aiClient))
 
 	group.GET("/templates", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
