@@ -4,6 +4,9 @@ export type MemeGenerationRequest = {
   image_base64?: string;
   tags_hint?: string[];
   user_id?: string;
+  user_email?: string;
+  user_name?: string;
+  user_avatar_url?: string;
 };
 
 export type TemplateRecommendation = {
@@ -33,4 +36,3 @@ export type MemeGenerationResponse = {
   safety: SafetySignal[];
   reasoning: string;
 };
-

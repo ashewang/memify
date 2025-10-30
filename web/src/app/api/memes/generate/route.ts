@@ -35,6 +35,9 @@ export async function POST(request: Request) {
 
   const session = await auth();
   const userID = session?.user?.id;
+  const userEmail = session?.user?.email;
+  const userName = session?.user?.name;
+  const userAvatar = session?.user?.image;
 
   const upstreamPayload: MemeGenerationRequest = {
     context_type: payload.context_type ?? "text",
@@ -42,6 +45,9 @@ export async function POST(request: Request) {
     image_base64: payload.image_base64,
     tags_hint: payload.tags_hint ?? [],
     user_id: payload.user_id ?? userID ?? undefined,
+    user_email: payload.user_email ?? userEmail ?? undefined,
+    user_name: payload.user_name ?? userName ?? undefined,
+    user_avatar_url: payload.user_avatar_url ?? userAvatar ?? undefined,
   };
 
   const upstreamResponse = await fetch(
@@ -73,4 +79,3 @@ export async function POST(request: Request) {
 
   return NextResponse.json(data);
 }
-

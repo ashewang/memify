@@ -9,10 +9,11 @@ import (
 
 	"github.com/anshuwang/memify/server/internal/ai"
 	"github.com/anshuwang/memify/server/internal/config"
+	"github.com/anshuwang/memify/server/internal/users"
 )
 
 // NewRouter constructs the Gin engine with baseline middleware and public routes.
-func NewRouter(cfg config.Config) *gin.Engine {
+func NewRouter(cfg config.Config, userRepo *users.Repository) *gin.Engine {
 	if cfg.IsDevelopment() {
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -25,7 +26,7 @@ func NewRouter(cfg config.Config) *gin.Engine {
 
 	registerSystemEndpoints(router)
 	aiClient := ai.NewClient(cfg.PythonServiceURL, nil)
-	registerAPIRoutes(router.Group("/api"), aiClient)
+	registerAPIRoutes(router.Group("/api"), aiClient, userRepo)
 
 	return router
 }
@@ -68,7 +69,7 @@ func registerSystemEndpoints(router *gin.Engine) {
 	})
 }
 
-func registerAPIRoutes(group *gin.RouterGroup, aiClient ai.Client) {
+func registerAPIRoutes(group *gin.RouterGroup, aiClient ai.Client, userRepo *users.Repository) {
 	group.GET("/ping", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
 			"message": "pong",
@@ -82,7 +83,7 @@ func registerAPIRoutes(group *gin.RouterGroup, aiClient ai.Client) {
 		})
 	})
 
-	group.POST("/memes/generate", memeGenerateHandler(aiClient))
+	group.POST("/memes/generate", memeGenerateHandler(aiClient, userRepo))
 
 	group.GET("/templates", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
@@ -90,4 +91,3 @@ func registerAPIRoutes(group *gin.RouterGroup, aiClient ai.Client) {
 		})
 	})
 }
-
