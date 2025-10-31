@@ -38,6 +38,8 @@ func runMigrations(ctx context.Context, db *sql.DB) error {
 	const createUsersTable = `
 CREATE TABLE IF NOT EXISTS users (
 	id TEXT PRIMARY KEY,
+	provider_name TEXT,
+	provider_account_id TEXT,
 	email TEXT,
 	display_name TEXT,
 	picture_url TEXT,
@@ -49,8 +51,21 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique_idx ON users (LOWER(email));
 `
 
+	const alterUsersTable = `
+ALTER TABLE users ADD COLUMN IF NOT EXISTS provider_name TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS provider_account_id TEXT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS users_provider_unique_idx
+  ON users (provider_name, provider_account_id)
+  WHERE provider_name IS NOT NULL AND provider_account_id IS NOT NULL;
+`
+
 	if _, err := db.ExecContext(ctx, createUsersTable); err != nil {
 		return fmt.Errorf("create users table: %w", err)
+	}
+
+	if _, err := db.ExecContext(ctx, alterUsersTable); err != nil {
+		return fmt.Errorf("alter users table: %w", err)
 	}
 
 	return nil

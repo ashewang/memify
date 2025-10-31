@@ -26,7 +26,7 @@ func NewRouter(cfg config.Config, userRepo *users.Repository) *gin.Engine {
 
 	registerSystemEndpoints(router)
 	aiClient := ai.NewClient(cfg.PythonServiceURL, nil)
-	registerAPIRoutes(router.Group("/api"), aiClient, userRepo)
+	registerAPIRoutes(router.Group("/api"), aiClient, userRepo, cfg.NextAuthSecret)
 
 	return router
 }
@@ -69,7 +69,7 @@ func registerSystemEndpoints(router *gin.Engine) {
 	})
 }
 
-func registerAPIRoutes(group *gin.RouterGroup, aiClient ai.Client, userRepo *users.Repository) {
+func registerAPIRoutes(group *gin.RouterGroup, aiClient ai.Client, userRepo *users.Repository, sessionSecret string) {
 	group.GET("/ping", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
 			"message": "pong",
@@ -82,6 +82,8 @@ func registerAPIRoutes(group *gin.RouterGroup, aiClient ai.Client, userRepo *use
 			"providers": []string{"google"},
 		})
 	})
+
+	group.POST("/users/session", userSessionHandler(userRepo, sessionSecret))
 
 	group.POST("/memes/generate", memeGenerateHandler(aiClient, userRepo))
 
