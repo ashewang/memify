@@ -13,6 +13,7 @@ type Config struct {
 	AllowedOrigins   []string
 	PythonServiceURL string
 	DatabaseURL      string
+	NextAuthSecret   string
 }
 
 // Load builds a Config from environment variables with sensible defaults for local development.
@@ -23,10 +24,15 @@ func Load() Config {
 		AllowedOrigins:   parseCSV(getEnv("API_ALLOWED_ORIGINS", "*")),
 		PythonServiceURL: getEnv("PYTHON_SERVICE_URL", "http://localhost:8000"),
 		DatabaseURL:      os.Getenv("DATABASE_URL"),
+		NextAuthSecret:   os.Getenv("NEXTAUTH_SECRET"),
 	}
 
 	if cfg.DatabaseURL == "" {
 		log.Println("warning: DATABASE_URL is not set; persistence features will be disabled until configured")
+	}
+
+	if cfg.NextAuthSecret == "" {
+		log.Println("warning: NEXTAUTH_SECRET is not set; user session endpoint will reject requests")
 	}
 
 	return cfg
@@ -61,4 +67,3 @@ func parseCSV(input string) []string {
 
 	return results
 }
-

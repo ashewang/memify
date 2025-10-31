@@ -20,10 +20,12 @@ func NewRepository(db *sql.DB) *Repository {
 
 // User models the minimal attributes we persist for authenticated users.
 type User struct {
-	ID          string
-	Email       *string
-	DisplayName *string
-	PictureURL  *string
+	ID                string
+	ProviderName      *string
+	ProviderAccountID *string
+	Email             *string
+	DisplayName       *string
+	PictureURL        *string
 }
 
 // Upsert inserts a user or updates existing attributes, stamping the last_seen_at column.
@@ -36,14 +38,18 @@ func (r *Repository) Upsert(ctx context.Context, user User) error {
 		return errors.New("user id is required")
 	}
 
+	providerName := normalize(user.ProviderName)
+	providerAccountID := normalize(user.ProviderAccountID)
 	email := normalize(user.Email)
 	displayName := normalize(user.DisplayName)
 	pictureURL := normalize(user.PictureURL)
 
 	const query = `
-INSERT INTO users (id, email, display_name, picture_url, created_at, updated_at, last_seen_at)
-VALUES ($1, $2, $3, $4, NOW(), NOW(), NOW())
+INSERT INTO users (id, provider_name, provider_account_id, email, display_name, picture_url, created_at, updated_at, last_seen_at)
+VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET
+	provider_name = COALESCE(EXCLUDED.provider_name, users.provider_name),
+	provider_account_id = COALESCE(EXCLUDED.provider_account_id, users.provider_account_id),
 	email = COALESCE(EXCLUDED.email, users.email),
 	display_name = COALESCE(EXCLUDED.display_name, users.display_name),
 	picture_url = COALESCE(EXCLUDED.picture_url, users.picture_url),
@@ -51,7 +57,7 @@ ON CONFLICT (id) DO UPDATE SET
 	last_seen_at = NOW();
 `
 
-	_, err := r.db.ExecContext(ctx, query, user.ID, email, displayName, pictureURL)
+	_, err := r.db.ExecContext(ctx, query, user.ID, providerName, providerAccountID, email, displayName, pictureURL)
 	return err
 }
 

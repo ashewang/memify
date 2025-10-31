@@ -15,9 +15,15 @@ import (
 	"github.com/anshuwang/memify/server/internal/database"
 	"github.com/anshuwang/memify/server/internal/httpserver"
 	"github.com/anshuwang/memify/server/internal/users"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load environment variables from .env file if it exists
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found or unable to load it; using environment variables")
+	}
+
 	cfg := config.Load()
 	var (
 		db       *sql.DB
